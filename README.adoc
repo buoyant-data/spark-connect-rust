@@ -1,0 +1,22 @@
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+:toc: macro
+
+= Spark Connect for Rust
+
+A link:https://spark.apache.org/docs/latest/spark-connect-overview.html[Spark
+Connect] client implementation in Rust. This repository provides both a Rust
+library for interacting with Spark Connect APIs and also a simple command line
+for sending Spark SQL commands to any Spark Connect endpoint.
+
+toc::[]
+
+
+== Building
+
+Building can be done with link:https://doc.rust-lang.org/cargo/[cargo] by invoking `cargo build` and `cargo test`

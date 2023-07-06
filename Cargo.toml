@@ -10,16 +10,28 @@ authors = [
     "R. Tyler Croy <rtyler@brokenco.de>",
 ]
 
+[[bin]]
+name = "spark-connect"
+path = "src/main.rs"
+doc = false
+
+[lib]
+name = "spark_connect"
+path = "src/lib.rs"
+
 [dependencies]
 # Pulling this in simply for the use of the prettyprint in the CLI
 arrow = { version = "43", features = ["prettyprint"]}
 arrow-buffer = "43"
 arrow-ipc = "43"
+http = "0.2.9"
 prost = "0.11"
 prost-types = "0.11.9"
 rustyline = { version = "12", features = ["with-file-history"]}
+thiserror = "1"
 tokio = { version = "1", features = ["full"] }
 tonic = "*"
+uuid = { version = "*", features = ["v4"] }
 
 [build-dependencies]
 tonic-build = "0.9.2"
