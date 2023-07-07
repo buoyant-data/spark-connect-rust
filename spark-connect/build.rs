@@ -6,7 +6,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Removing the file on every build to make sure that the configured features are respected
     // between invocations
     if std::path::Path::new(&output_file).exists() {
-        std::fs::remove_file(&output_file)?;
+        std::fs::remove_file(output_file)?;
     }
 
     let tree = "../contrib/spark/connector/connect/common/src/main/protobuf/spark/connect/";

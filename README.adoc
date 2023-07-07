@@ -20,3 +20,34 @@ toc::[]
 == Building
 
 Building can be done with link:https://doc.rust-lang.org/cargo/[cargo] by invoking `cargo build` and `cargo test`
+
+
+== Using
+
+=== CLI
+
+The `spark-connect-cli` binary can be used to run Spark SQL commands against the Spark Connect server, for example:
+
+----
+% cargo run --bin spark-connect-cli
+>> create temporary view people as select current_date();
++-------------+
+| show_string |
++-------------+
+| (0 rows)    |
+|             |
++-------------+
+>> select * from people;
++-------------------------------+
+| show_string                   |
++-------------------------------+
+| -RECORD 0-------------------- |
+|  current_date() | 2023-07-06  |
+|                               |
++-------------------------------+
+>>
+----
+
+=== In Rust
+
+Consult the Rustdocs for tips on how to use the library.

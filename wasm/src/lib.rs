@@ -22,9 +22,9 @@ pub async fn greet() {
 
     debug(&JsValue::from_str("Greetings!").into());
     let base_url = "http://localhost:15002";
-    let mut spark = SparkConnect::with_client(Client::new(base_url.into()));
+    let mut spark = SparkSession::with_client(Client::new(base_url.into()));
 
-    let response = spark.sql("SELECT current_date();").await;
-    debug(&JsValue::from_str(&format!("response: {response:?}")).into());
+    let _df = spark.sql("SELECT current_date();").await;
+    //debug(&JsValue::from_str(&format!("response: {response:?}")).into());
     alert("Hello, wasm!");
 }

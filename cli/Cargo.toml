@@ -11,8 +11,6 @@ authors = [
 ]
 
 [dependencies]
-# Pulling this in simply for the use of the prettyprint in the CLI
-arrow = { version = "43", features = ["prettyprint"]}
 rustyline = { version = "12", features = ["with-file-history"]}
-spark-connect = { path = "../spark-connect" }
-tokio = { version = "1", features = ["full"] }
+spark-connect = { path = "../spark-connect", features = ["prettyprint"] }
+tokio = { version = "1", features = ["macros", "rt", "net"] }
