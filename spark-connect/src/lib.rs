@@ -5,10 +5,8 @@
 //! # use spark_connect::*;
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let spark = SparkConnect::with("http://[::1]:15002")
-//!                 .build()?
-//!                 .connect()
-//!                 .await?;
+//! let channel = tonic::transport::channel::Channel::from_static("http://[::1]:15002").connect().await?;
+//! let spark = SparkConnect::with_client(channel);
 //! # Ok(())
 //! # }
 //! ```
@@ -32,36 +30,36 @@ pub use crate::error::Error;
 pub use crate::proto::spark_connect_service_client::SparkConnectServiceClient;
 
 /// The primary client interface for interacting with SparkConnect instances
-#[derive(Clone, Debug, Default)]
-pub struct SparkConnect {
-    /// Configured hostname for the Spark Connect connection
-    host: String,
+#[derive(Clone, Debug)]
+pub struct SparkConnect<T> {
     /// Session ID to use for this connection
     session_id: Uuid,
     /// Inner gRPC client structure
-    inner: Option<SparkConnectServiceClient<tonic::transport::channel::Channel>>,
+    inner: SparkConnectServiceClient<T>,
 }
 
-impl SparkConnect {
-    /// Create a [SparkConnectBuilder] with the given hostname to a Spark Connect server
-    pub fn with(host: &str) -> SparkConnectBuilder {
-        let mut builder = SparkConnectBuilder::default();
-        builder.host = Some(host.into());
-        builder
+use tonic::codegen::{Body, Bytes, StdError};
+
+impl<T> SparkConnect<T>
+where
+    T: tonic::client::GrpcService<tonic::body::BoxBody>,
+    T::ResponseBody: Body<Data = Bytes> + Send + 'static,
+    <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+{
+    fn new(inner: SparkConnectServiceClient<T>) -> Self {
+        Self {
+            session_id: Uuid::new_v4(),
+            inner,
+        }
     }
 
-    /// Connect the configured [SparkConnect] instance to the configured `host`
-    pub async fn connect(mut self) -> Result<Self, Error> {
-        let uri: tonic::transport::Uri = self.host.parse()?;
-        // creating a channel ie connection to server
-        let channel = tonic::transport::Channel::builder(uri).connect().await?;
-        self.inner = Some(SparkConnectServiceClient::new(channel));
-
-        Ok(self)
+    pub fn with_client(client: T) -> Self {
+        let inner = SparkConnectServiceClient::new(client);
+        Self::new(inner)
     }
 
     /// Send a SQL query to the Spark Connect server
-    pub async fn sql(&mut self, query: &str) -> Result<arrow::record_batch::RecordBatch, Error> {
+    pub async fn sql(&mut self, query: &str) -> Result<arrow_array::RecordBatch, Error> {
         use crate::proto::*;
         let plan = Plan {
             op_type: Some(plan::OpType::Command(Command {
@@ -80,13 +78,7 @@ impl SparkConnect {
             request_options: vec![],
         };
 
-        let mut stream = self
-            .inner
-            .as_mut()
-            .unwrap()
-            .execute_plan(request)
-            .await?
-            .into_inner();
+        let mut stream = self.inner.execute_plan(request).await?.into_inner();
 
         while let Some(response) = stream.message().await? {
             if let Some(result) = response.response_type {
@@ -114,13 +106,7 @@ impl SparkConnect {
                             request_options: vec![],
                         };
 
-                        let mut stream = self
-                            .inner
-                            .as_mut()
-                            .unwrap()
-                            .execute_plan(request)
-                            .await?
-                            .into_inner();
+                        let mut stream = self.inner.execute_plan(request).await?.into_inner();
                         while let Some(response) = stream.message().await? {
                             if let Some(response_type) = response.response_type {
                                 match response_type {
@@ -147,34 +133,17 @@ impl SparkConnect {
     }
 }
 
-/// Internal builder object for creating new [SparkConnect] objects
-#[derive(Clone, Debug, Default)]
-pub struct SparkConnectBuilder {
-    host: Option<String>,
-}
-
-impl SparkConnectBuilder {
-    /// Build the configured [SparkConnect] instance
-    pub fn build(self) -> Result<SparkConnect, Error> {
-        match self.host {
-            Some(host) => Ok(SparkConnect {
-                session_id: Uuid::new_v4(),
-                inner: None,
-                host,
-            }),
-            None => Err(Error::Unknown),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_build_sparkconnect() {
+    /*
+    #[tokio::test]
+    async fn test_build_sparkconnect() -> Result<(), Error>  {
         let host = "http://example.com";
-        let spark = SparkConnect::with(host).build().expect("Failed to build");
+        let spark = SparkConnect::with(host).await?;
         assert_eq!(spark.host, host);
+        Ok(())
     }
+    */
 }

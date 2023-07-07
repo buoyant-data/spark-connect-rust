@@ -11,14 +11,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rl = DefaultEditor::new()?;
     let history = ".spark-connect.history";
 
-    let mut spark = SparkConnect::with("http://[::1]:15002")
-        .build()?
+    let channel = tonic::transport::channel::Channel::from_static("http://[::1]:15002")
         .connect()
         .await?;
+    let mut spark = SparkConnect::with_client(channel);
 
     if rl.load_history(&history).is_err() {
         println!("No previous history.");
     }
+
     loop {
         let readline = rl.readline(">> ");
         match readline {

@@ -6,12 +6,17 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Arrow error: {0}")]
-    ArrowError(#[from] arrow::error::ArrowError),
+    ArrowError(#[from] arrow_schema::ArrowError),
+
+    #[cfg(not(feature = "wasm"))]
     #[error("HTTP error: {0}")]
     HttpError(#[from] http::uri::InvalidUri),
+
+    #[cfg(not(feature = "wasm"))]
     /// Wrapped error from the tonic library
     #[error("Tonic transport error: {0}")]
     TransportError(#[from] tonic::transport::Error),
+
     #[error("Tonic gRPC error: {0}")]
     RpcError(#[from] tonic::Status),
     /// Unknown error
